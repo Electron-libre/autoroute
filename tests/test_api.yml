@@ -1,0 +1,42 @@
+---
+openapi: 3.0.0
+info:
+  title: Test API
+  version: 0.0.1
+paths:
+  /foo:
+    get:
+      operationId: test_handler_get
+      responses:
+        '200':
+          description: success
+    post:
+      operationId: test_handler_post
+      responses:
+        '200':
+          description: success
+    put:
+      operationId: test_handler_put
+      responses:
+        '200':
+          description: success
+    delete:
+      operationId: test_handler_delete
+      responses:
+        '200':
+          description: success
+    patch:
+      operationId: test_handler_patch
+      responses:
+        '200':
+          description: success
+    head:
+      operationId: test_handler_head
+      responses:
+        '200':
+          description: success
+    options:
+      operationId: test_handler_options
+      responses:
+        '200':
+          description: success

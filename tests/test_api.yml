@@ -40,3 +40,10 @@ paths:
       responses:
         '200':
           description: success
+
+  /foo/{bar_id}:
+    get:
+      operationId: test_handler_get
+      responses:
+        '200':
+          description: success

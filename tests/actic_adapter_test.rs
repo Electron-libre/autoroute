@@ -9,6 +9,7 @@ use autoroute::gen_config_from_path;
 #[derive(Deserialize, Serialize)]
 struct TestHandlerResponse {
     path_param: String,
+    reflected_url: String,
 }
 
 fn test_handler(req: HttpRequest) -> HttpResponse {
@@ -17,7 +18,12 @@ fn test_handler(req: HttpRequest) -> HttpResponse {
         .get("fooId")
         .expect("param fooId is missing")
         .to_string();
-    let resp = TestHandlerResponse { path_param };
+    let reflected_url = req.url_for("foo", &["1"]).unwrap().to_string();
+
+    let resp = TestHandlerResponse {
+        path_param,
+        reflected_url,
+    };
     HttpResponse::Ok().json(resp)
 }
 
@@ -65,4 +71,20 @@ async fn test_path_params() {
     let resp = test::call_service(&mut test_service, req).await;
     let json_resp: TestHandlerResponse = test::read_body_json(resp).await;
     assert_eq!(json_resp.path_param, "1",);
+}
+
+#[actix_rt::test]
+async fn test_url_reflection() {
+    gen_config_from_path!("tests/test_api.yml");
+    let mut test_service =
+        test::init_service(App::new().service(web::scope(TEST_SCOPE).configure(autoroute_config)))
+            .await;
+
+    let req = test::TestRequest::with_uri(TEST_URI)
+        .method(http::Method::GET)
+        .to_request();
+
+    let resp = test::call_service(&mut test_service, req).await;
+    let json_resp: TestHandlerResponse = test::read_body_json(resp).await;
+    assert_eq!(json_resp.reflected_url, "http://localhost:8080/api/foo/1",);
 }

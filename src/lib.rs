@@ -8,6 +8,7 @@ mod actix_adapter;
 mod spec;
 
 const HANDLER_EXTENSION_NAME: &str = "x-autoroute-handler";
+const RESOURCE_EXTENSION: &str = "x-autoroute-resource";
 
 fn gen_config(spec: openapi::OpenApi) -> TokenStream {
     if let openapi::OpenApi::V3_0(spec) = spec {

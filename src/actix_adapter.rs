@@ -8,8 +8,15 @@ impl Path {
         let url = &self.url;
         let mut routes = quote! {};
         routes.append_separated(self.operations.to_config(), Punct::new('.', Spacing::Joint));
+
+        let mut resource = quote! { web::resource(#url) };
+        if let Some(resource_name) = &self.resource_name {
+            let name = quote! { .name(#resource_name) };
+            resource.append_all(name)
+        }
+
         let service = quote! {
-            cfg.service(web::resource(#url).#routes)
+            cfg.service(#resource.#routes)
         };
         service
     }

@@ -13,7 +13,7 @@ use proc_macro2::{Punct, Spacing, TokenStream};
 use proc_macro_error::abort_call_site;
 use quote::{quote, ToTokens, TokenStreamExt};
 
-use crate::HANDLER_EXTENSION_NAME;
+use crate::{HANDLER_EXTENSION_NAME, RESOURCE_EXTENSION};
 
 #[derive(Eq, PartialEq, Debug)]
 pub struct Spec {
@@ -37,16 +37,27 @@ impl From<BTreeMap<String, orig::PathItem>> for Paths {
     }
 }
 
+type ResourceName = String;
+
 #[derive(Eq, PartialEq, Debug)]
 pub struct Path {
     pub url: Url,
     pub operations: Operations,
+    pub resource_name: Option<ResourceName>,
 }
 
 impl From<(String, orig::PathItem)> for Path {
     fn from((url, path_item): (String, PathItem)) -> Self {
-        let operations = Operations::from(path_item);
-        Self { url, operations }
+        let operations = Operations::from(path_item.clone());
+        let resource_name = match path_item.extensions.get(RESOURCE_EXTENSION) {
+            Some(Value::String(resource_name)) => Some(resource_name.to_owned()),
+            _ => None,
+        };
+        Self {
+            url,
+            operations,
+            resource_name,
+        }
     }
 }
 

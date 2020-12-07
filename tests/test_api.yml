@@ -5,6 +5,7 @@ info:
   version: 0.0.1
 paths:
   /foo/{fooId}:
+    x-autoroute-resource: "foo"
     get:
       operationId: getFoo
       responses:

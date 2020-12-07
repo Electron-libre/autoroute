@@ -1,6 +1,10 @@
-use std::collections::BTreeMap;
-use std::slice::Iter;
+use std::{
+    collections::BTreeMap,
+    fmt::{self, Display, Formatter},
+    slice::Iter,
+};
 
+use http::Method as httpMethod;
 use openapi::{
     v3_0 as orig,
     v3_0::{PathItem, Value},
@@ -51,21 +55,37 @@ type Url = String;
 #[derive(Eq, PartialEq, Debug)]
 pub struct Operations(pub(crate) Vec<Operation>);
 
+#[derive(Debug, Eq, PartialEq)]
+pub struct Method(pub(crate) httpMethod);
+
+impl Display for Method {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self.0)
+    }
+}
+
+impl From<httpMethod> for Method {
+    fn from(http_method: httpMethod) -> Self {
+        Self(http_method)
+    }
+}
+
 impl From<orig::PathItem> for Operations {
     fn from(path_item: PathItem) -> Self {
         let operations: Vec<Operation> = vec![
-            (Method::Get, path_item.get),
-            (Method::Delete, path_item.delete),
-            (Method::Head, path_item.head),
-            (Method::Options, path_item.options),
-            (Method::Patch, path_item.patch),
-            (Method::Post, path_item.post),
-            (Method::Put, path_item.put),
+            (httpMethod::GET, path_item.get),
+            (httpMethod::DELETE, path_item.delete),
+            (httpMethod::HEAD, path_item.head),
+            (httpMethod::OPTIONS, path_item.options),
+            (httpMethod::PATCH, path_item.patch),
+            (httpMethod::POST, path_item.post),
+            (httpMethod::PUT, path_item.put),
+            (httpMethod::TRACE, path_item.trace),
         ]
         .into_iter()
         .filter_map(|(m, op)| match op {
             None => None,
-            Some(o) => Some(Operation::from((m, o))),
+            Some(o) => Some(Operation::from((Method::from(m), o))),
         })
         .collect();
         Self(operations)
@@ -73,17 +93,6 @@ impl From<orig::PathItem> for Operations {
 }
 
 type OperationId = String;
-
-#[derive(Debug, Eq, PartialEq)]
-pub(crate) enum Method {
-    Get,
-    Delete,
-    Head,
-    Options,
-    Patch,
-    Post,
-    Put,
-}
 
 #[derive(Eq, PartialEq, Debug)]
 pub(crate) struct HandlerIdentifier(pub(crate) String);

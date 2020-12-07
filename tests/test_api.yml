@@ -45,3 +45,8 @@ paths:
         '200':
           description: success
       x-autoroute-handler: test_handler
+    trace:
+      responses:
+        '200':
+          description: success
+      x-autoroute-handler: test_handler

@@ -7,7 +7,6 @@ mod actix_adapter;
 #[allow(unused)]
 mod spec;
 
-
 const HANDLER_EXTENSION_NAME: &str = "x-autoroute-handler";
 
 fn gen_config(spec: openapi::OpenApi) -> TokenStream {

@@ -15,6 +15,14 @@ impl Path {
     }
 }
 
+impl ToTokens for Method {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        let str_rep = Ident::new(&self.to_string(), Span::call_site());
+        let method = quote! { Method::#str_rep  };
+        tokens.append_all(method)
+    }
+}
+
 impl Operations {
     fn to_config(&self) -> Vec<TokenStream> {
         self.0.iter().map(|o| o.to_config()).collect()
@@ -23,18 +31,10 @@ impl Operations {
 
 impl Operation {
     fn to_config(&self) -> TokenStream {
-        let method = match self.method {
-            Method::Get => quote! { GET },
-            Method::Post => quote! { POST },
-            Method::Put => quote! { PUT },
-            Method::Delete => quote! { DELETE },
-            Method::Patch => quote! { PATCH },
-            Method::Head => quote! { HEAD },
-            Method::Options => quote! { OPTIONS },
-        };
+        let method = &self.method;
 
         let handler = &self.handler;
-        quote! { route(web::method(http::Method::#method).to(#handler)) }
+        quote! { route(web::method(http::#method).to(#handler)) }
     }
 }
 

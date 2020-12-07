@@ -1,12 +1,14 @@
 use proc_macro::TokenStream;
 
-use proc_macro_error::proc_macro_error;
-use proc_macro_error::{abort, abort_call_site};
+use proc_macro_error::{abort, abort_call_site, proc_macro_error};
 use syn::{parse_macro_input, LitStr};
 
 mod actix_adapter;
 #[allow(unused)]
 mod spec;
+
+
+const HANDLER_EXTENSION_NAME: &str = "x-autoroute-handler";
 
 fn gen_config(spec: openapi::OpenApi) -> TokenStream {
     if let openapi::OpenApi::V3_0(spec) = spec {

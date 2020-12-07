@@ -1,10 +1,15 @@
 use std::collections::BTreeMap;
 use std::slice::Iter;
 
-use openapi::v3_0 as orig;
-use openapi::v3_0::PathItem;
+use openapi::{
+    v3_0 as orig,
+    v3_0::{PathItem, Value},
+};
 use proc_macro2::{Punct, Spacing, TokenStream};
-use quote::{quote, TokenStreamExt, ToTokens};
+use proc_macro_error::abort_call_site;
+use quote::{quote, ToTokens, TokenStreamExt};
+
+use crate::HANDLER_EXTENSION_NAME;
 
 #[derive(Eq, PartialEq, Debug)]
 pub struct Spec {
@@ -57,12 +62,12 @@ impl From<orig::PathItem> for Operations {
             (Method::Post, path_item.post),
             (Method::Put, path_item.put),
         ]
-            .into_iter()
-            .filter_map(|(m, op)| match op {
-                None => None,
-                Some(o) => Some(Operation::from((m, o))),
-            })
-            .collect();
+        .into_iter()
+        .filter_map(|(m, op)| match op {
+            None => None,
+            Some(o) => Some(Operation::from((m, o))),
+        })
+        .collect();
         Self(operations)
     }
 }
@@ -81,15 +86,39 @@ pub(crate) enum Method {
 }
 
 #[derive(Eq, PartialEq, Debug)]
+pub(crate) struct HandlerIdentifier(pub(crate) String);
+
+impl HandlerIdentifier {}
+
+impl From<orig::Extensions> for HandlerIdentifier {
+    fn from(extensions: orig::Extensions) -> Self {
+        match extensions.get(HANDLER_EXTENSION_NAME) {
+            // TODO validate handler format as identifier
+            Some(Value::String(handler_ident)) => Self(handler_ident.into()),
+            _ => abort_call_site!(format!(
+                "Invalid autoroute handler value identifier: {:?}",
+                extensions
+            )),
+        }
+    }
+}
+
+#[derive(Eq, PartialEq, Debug)]
 pub struct Operation {
-    pub id: OperationId,
+    pub(crate) id: Option<OperationId>,
     pub(crate) method: Method,
+    pub(crate) handler: HandlerIdentifier,
 }
 
 impl From<(Method, orig::Operation)> for Operation {
     fn from((method, op): (Method, orig::Operation)) -> Self {
-        let id: OperationId = op.operation_id.expect("Operation Id is required");
-        Self { method, id }
+        let id = op.operation_id.to_owned();
+        let handler = HandlerIdentifier::from(op.extensions);
+        Self {
+            method,
+            id,
+            handler,
+        }
     }
 }
 
@@ -109,6 +138,7 @@ mod tests {
             components: None,
             tags: None,
             external_docs: None,
+            extensions: Default::default(),
         };
 
         let spec = Spec::from(orig_spec);

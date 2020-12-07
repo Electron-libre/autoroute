@@ -1,8 +1,7 @@
-use proc_macro2::{Ident, Punct};
-use proc_macro2::{Spacing, TokenStream};
-use quote::{quote, TokenStreamExt};
+use proc_macro2::{Ident, Punct, Spacing, Span, TokenStream};
+use quote::{quote, ToTokens, TokenStreamExt};
 
-use crate::spec::{Method, Operation, Operations, Path, Spec};
+use crate::spec::{HandlerIdentifier, Method, Operation, Operations, Path, Spec};
 
 impl Path {
     fn to_config(&self) -> TokenStream {
@@ -24,7 +23,6 @@ impl Operations {
 
 impl Operation {
     fn to_config(&self) -> TokenStream {
-        let operation_id = syn::parse_str::<Ident>(&self.id).unwrap();
         let method = match self.method {
             Method::Get => quote! { GET },
             Method::Post => quote! { POST },
@@ -34,7 +32,15 @@ impl Operation {
             Method::Head => quote! { HEAD },
             Method::Options => quote! { OPTIONS },
         };
-        quote! { route(web::method(http::Method::#method).to(#operation_id)) }
+
+        let handler = &self.handler;
+        quote! { route(web::method(http::Method::#method).to(#handler)) }
+    }
+}
+
+impl ToTokens for HandlerIdentifier {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        Ident::new(self.0.as_str(), Span::call_site()).to_tokens(tokens)
     }
 }
 

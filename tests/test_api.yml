@@ -4,46 +4,44 @@ info:
   title: Test API
   version: 0.0.1
 paths:
-  /foo:
+  /foo/{fooId}:
     get:
-      operationId: test_handler_get
+      operationId: getFoo
       responses:
         '200':
           description: success
+      x-autoroute-handler: test_handler
     post:
-      operationId: test_handler_post
+      operationId: addFoo
       responses:
         '200':
           description: success
+      x-autoroute-handler: test_handler
     put:
-      operationId: test_handler_put
+      operationId: setFoo
       responses:
         '200':
           description: success
+      x-autoroute-handler: test_handler
     delete:
-      operationId: test_handler_delete
+      operationId: removeFoo
       responses:
         '200':
           description: success
+      x-autoroute-handler: test_handler
     patch:
-      operationId: test_handler_patch
+      operationId: modifyFoo
       responses:
         '200':
           description: success
+      x-autoroute-handler: test_handler
     head:
-      operationId: test_handler_head
       responses:
         '200':
           description: success
+      x-autoroute-handler: test_handler
     options:
-      operationId: test_handler_options
       responses:
         '200':
           description: success
-
-  /foo/{bar_id}:
-    get:
-      operationId: test_handler_get
-      responses:
-        '200':
-          description: success
+      x-autoroute-handler: test_handler

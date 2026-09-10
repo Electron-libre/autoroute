@@ -12,7 +12,7 @@ struct TestHandlerResponse {
     reflected_url: String,
 }
 
-fn test_handler(req: HttpRequest) -> HttpResponse {
+async fn test_handler(req: HttpRequest) -> HttpResponse {
     let path_param = req
         .match_info()
         .get("fooId")

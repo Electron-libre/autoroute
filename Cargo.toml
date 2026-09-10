@@ -19,8 +19,8 @@ http = "0.2.1"
 [dev-dependencies]
 serde = { version = "1", features = ["derive"] }
 env_logger = "0.8.1"
-actix-web = "3.2"
+actix-web = "4"
 reqwest = "0.10"
 futures = "0.3.8"
-actix-rt = "1.1.1"
+actix-rt = "2"
 trybuild = "1.0"

@@ -107,11 +107,24 @@ pub(crate) struct HandlerIdentifier(pub(crate) String);
 
 impl HandlerIdentifier {}
 
+/// Whether `ident` can be used as a Rust identifier, i.e. can safely be
+/// turned into a `proc_macro2::Ident` without panicking.
+fn is_valid_handler_identifier(ident: &str) -> bool {
+    syn::parse_str::<syn::Ident>(ident).is_ok()
+}
+
 impl From<orig::Extensions> for HandlerIdentifier {
     fn from(extensions: orig::Extensions) -> Self {
         match extensions.get(HANDLER_EXTENSION_NAME) {
-            // TODO validate handler format as identifier
-            Some(Value::String(handler_ident)) => Self(handler_ident.into()),
+            Some(Value::String(handler_ident)) => {
+                if !is_valid_handler_identifier(handler_ident) {
+                    abort_call_site!(format!(
+                        "Invalid autoroute handler identifier {:?}: must be a valid Rust identifier",
+                        handler_ident
+                    ));
+                }
+                Self(handler_ident.into())
+            }
             _ => abort_call_site!(format!(
                 "Invalid autoroute handler value identifier: {:?}",
                 extensions
@@ -165,5 +178,56 @@ mod tests {
                 paths: Paths(vec![])
             }
         )
+    }
+
+    /// Build the `x-autoroute-handler` extensions map for a single GET
+    /// operation, the same way it would be produced by parsing a real
+    /// OpenAPI document.
+    fn extensions_with_handler(handler: &str) -> orig::Extensions {
+        let yaml = format!(
+            "openapi: \"3.0.0\"\n\
+             info:\n  title: test\n  version: \"1\"\n\
+             paths:\n  /test:\n    get:\n      responses:\n        \"200\":\n          description: success\n      x-autoroute-handler: \"{}\"\n",
+            handler
+        );
+        match openapi::from_reader(yaml.as_bytes()).expect("valid OpenAPI document") {
+            openapi::OpenApi::V3_0(spec) => spec
+                .paths
+                .get("/test")
+                .expect("path present")
+                .get
+                .as_ref()
+                .expect("operation present")
+                .extensions
+                .clone(),
+            _ => panic!("expected a V3 specification"),
+        }
+    }
+
+    #[test]
+    fn test_handler_identifier_from_valid_identifier() {
+        let extensions = extensions_with_handler("test_handler");
+        assert_eq!(
+            HandlerIdentifier::from(extensions),
+            HandlerIdentifier("test_handler".to_string())
+        );
+    }
+
+    // `HandlerIdentifier::from` aborts (via `abort_call_site!`) on an invalid
+    // identifier, which only unwinds cleanly from within a real proc-macro
+    // `entry_point`. So the validation predicate it relies on is exercised
+    // directly here instead of trying to catch the abort from a plain unit
+    // test — this is what used to let an invalid `x-autoroute-handler` value
+    // reach `Ident::new` and panic deep inside `actix_adapter.rs`.
+    #[test]
+    fn test_is_valid_handler_identifier() {
+        assert!(is_valid_handler_identifier("test_handler"));
+        assert!(is_valid_handler_identifier("_leading_underscore"));
+
+        assert!(!is_valid_handler_identifier(""));
+        assert!(!is_valid_handler_identifier("not a valid ident!"));
+        assert!(!is_valid_handler_identifier("123abc"));
+        assert!(!is_valid_handler_identifier("path::to::handler"));
+        assert!(!is_valid_handler_identifier("self"));
     }
 }

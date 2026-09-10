@@ -148,14 +148,14 @@ mod tests {
     #[test]
     fn test_spec_from_orig() {
         let orig_spec = orig::Spec {
-            openapi: "".to_string(),
-            info: Default::default(),
+            openapi: String::new(),
+            info: orig::Info::default(),
             servers: None,
-            paths: Default::default(),
+            paths: BTreeMap::default(),
             components: None,
             tags: None,
             external_docs: None,
-            extensions: Default::default(),
+            extensions: orig::Extensions::default(),
         };
 
         let spec = Spec::from(orig_spec);
@@ -164,18 +164,17 @@ mod tests {
             Spec {
                 paths: Paths(vec![])
             }
-        )
+        );
     }
 
     /// Build the `x-autoroute-handler` extensions map for a single GET
     /// operation, the same way it would be produced by parsing a real
-    /// OpenAPI document.
+    /// `OpenAPI` document.
     fn extensions_with_handler(handler: &str) -> orig::Extensions {
         let yaml = format!(
             "openapi: \"3.0.0\"\n\
              info:\n  title: test\n  version: \"1\"\n\
-             paths:\n  /test:\n    get:\n      responses:\n        \"200\":\n          description: success\n      x-autoroute-handler: \"{}\"\n",
-            handler
+             paths:\n  /test:\n    get:\n      responses:\n        \"200\":\n          description: success\n      x-autoroute-handler: \"{handler}\"\n"
         );
         match openapi::from_reader(yaml.as_bytes()).expect("valid OpenAPI document") {
             openapi::OpenApi::V3_0(spec) => spec
@@ -187,7 +186,7 @@ mod tests {
                 .expect("operation present")
                 .extensions
                 .clone(),
-            _ => panic!("expected a V3 specification"),
+            openapi::OpenApi::V2(_) => panic!("expected a V3 specification"),
         }
     }
 

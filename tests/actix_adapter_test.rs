@@ -33,7 +33,7 @@ const TEST_URI: &str = "/api/foo/1";
 #[actix_rt::test]
 async fn test_supported_methods() {
     gen_config_from_path!("tests/test_api.yml");
-    let mut test_service =
+    let test_service =
         test::init_service(App::new().service(web::scope(TEST_SCOPE).configure(autoroute_config)))
             .await;
 
@@ -47,12 +47,11 @@ async fn test_supported_methods() {
             .method(http_method)
             .to_request();
 
-        let resp = test::call_service(&mut test_service, req).await;
+        let resp = test::call_service(&test_service, req).await;
         assert_eq!(
             resp.status(),
             http::StatusCode::OK,
-            "Failed for method {}",
-            method
+            "Failed for method {method}"
         );
     }
 }
@@ -60,7 +59,7 @@ async fn test_supported_methods() {
 #[actix_rt::test]
 async fn test_path_params() {
     gen_config_from_path!("tests/test_api.yml");
-    let mut test_service =
+    let test_service =
         test::init_service(App::new().service(web::scope(TEST_SCOPE).configure(autoroute_config)))
             .await;
 
@@ -68,7 +67,7 @@ async fn test_path_params() {
         .method(http::Method::GET)
         .to_request();
 
-    let resp = test::call_service(&mut test_service, req).await;
+    let resp = test::call_service(&test_service, req).await;
     let json_resp: TestHandlerResponse = test::read_body_json(resp).await;
     assert_eq!(json_resp.path_param, "1",);
 }
@@ -76,7 +75,7 @@ async fn test_path_params() {
 #[actix_rt::test]
 async fn test_url_reflection() {
     gen_config_from_path!("tests/test_api.yml");
-    let mut test_service =
+    let test_service =
         test::init_service(App::new().service(web::scope(TEST_SCOPE).configure(autoroute_config)))
             .await;
 
@@ -84,7 +83,7 @@ async fn test_url_reflection() {
         .method(http::Method::GET)
         .to_request();
 
-    let resp = test::call_service(&mut test_service, req).await;
+    let resp = test::call_service(&test_service, req).await;
     let json_resp: TestHandlerResponse = test::read_body_json(resp).await;
     assert_eq!(json_resp.reflected_url, "http://localhost:8080/api/foo/1",);
 }
@@ -108,7 +107,7 @@ paths:
       x-autoroute-handler: test_handler
 "#
     );
-    let mut test_service =
+    let test_service =
         test::init_service(App::new().service(web::scope(TEST_SCOPE).configure(autoroute_config)))
             .await;
 
@@ -116,7 +115,7 @@ paths:
         .method(http::Method::GET)
         .to_request();
 
-    let resp = test::call_service(&mut test_service, req).await;
+    let resp = test::call_service(&test_service, req).await;
     assert_eq!(resp.status(), http::StatusCode::OK);
     let json_resp: TestHandlerResponse = test::read_body_json(resp).await;
     assert_eq!(json_resp.path_param, "1");

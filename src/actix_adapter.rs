@@ -12,7 +12,7 @@ impl Path {
         let mut resource = quote! { web::resource(#url) };
         if let Some(resource_name) = &self.resource_name {
             let name = quote! { .name(#resource_name) };
-            resource.append_all(name)
+            resource.append_all(name);
         }
 
         let service = quote! {
@@ -26,13 +26,13 @@ impl ToTokens for Method {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let str_rep = Ident::new(&self.to_string(), Span::call_site());
         let method = quote! { Method::#str_rep  };
-        tokens.append_all(method)
+        tokens.append_all(method);
     }
 }
 
 impl Operations {
     fn to_config(&self) -> Vec<TokenStream> {
-        self.0.iter().map(|o| o.to_config()).collect()
+        self.0.iter().map(Operation::to_config).collect()
     }
 }
 
@@ -47,7 +47,7 @@ impl Operation {
 
 impl ToTokens for HandlerIdentifier {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        Ident::new(self.0.as_str(), Span::call_site()).to_tokens(tokens)
+        Ident::new(self.0.as_str(), Span::call_site()).to_tokens(tokens);
     }
 }
 

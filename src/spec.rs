@@ -100,8 +100,6 @@ impl From<orig::PathItem> for Operations {
     }
 }
 
-type OperationId = String;
-
 #[derive(Eq, PartialEq, Debug)]
 pub(crate) struct HandlerIdentifier(pub(crate) String);
 
@@ -135,20 +133,14 @@ impl From<orig::Extensions> for HandlerIdentifier {
 
 #[derive(Eq, PartialEq, Debug)]
 pub struct Operation {
-    pub(crate) id: Option<OperationId>,
     pub(crate) method: Method,
     pub(crate) handler: HandlerIdentifier,
 }
 
 impl From<(Method, orig::Operation)> for Operation {
     fn from((method, op): (Method, orig::Operation)) -> Self {
-        let id = op.operation_id.to_owned();
         let handler = HandlerIdentifier::from(op.extensions);
-        Self {
-            method,
-            id,
-            handler,
-        }
+        Self { method, handler }
     }
 }
 

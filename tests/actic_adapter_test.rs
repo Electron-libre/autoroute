@@ -18,7 +18,7 @@ fn test_handler(req: HttpRequest) -> HttpResponse {
         .get("fooId")
         .expect("param fooId is missing")
         .to_string();
-    let reflected_url = req.url_for("foo", &["1"]).unwrap().to_string();
+    let reflected_url = req.url_for("foo", ["1"]).unwrap().to_string();
 
     let resp = TestHandlerResponse {
         path_param,

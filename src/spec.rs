@@ -91,10 +91,7 @@ impl From<(Url, orig::PathItem)> for Operations {
             (httpMethod::TRACE, path_item.trace),
         ]
         .into_iter()
-        .filter_map(|(m, op)| match op {
-            None => None,
-            Some(o) => Some(Operation::from((url.clone(), Method::from(m), o))),
-        })
+        .filter_map(|(m, op)| op.map(|o| Operation::from((url.clone(), Method::from(m), o))))
         .collect();
         Self(operations)
     }

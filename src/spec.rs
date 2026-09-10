@@ -45,7 +45,7 @@ pub struct Path {
 
 impl From<(String, orig::PathItem)> for Path {
     fn from((url, path_item): (String, PathItem)) -> Self {
-        let operations = Operations::from(path_item.clone());
+        let operations = Operations::from((url.clone(), path_item.clone()));
         let resource_name = match path_item.extensions.get(RESOURCE_EXTENSION) {
             Some(Value::String(resource_name)) => Some(resource_name.to_owned()),
             _ => None,
@@ -78,8 +78,8 @@ impl From<httpMethod> for Method {
     }
 }
 
-impl From<orig::PathItem> for Operations {
-    fn from(path_item: PathItem) -> Self {
+impl From<(Url, orig::PathItem)> for Operations {
+    fn from((url, path_item): (Url, PathItem)) -> Self {
         let operations: Vec<Operation> = vec![
             (httpMethod::GET, path_item.get),
             (httpMethod::DELETE, path_item.delete),
@@ -93,7 +93,7 @@ impl From<orig::PathItem> for Operations {
         .into_iter()
         .filter_map(|(m, op)| match op {
             None => None,
-            Some(o) => Some(Operation::from((Method::from(m), o))),
+            Some(o) => Some(Operation::from((url.clone(), Method::from(m), o))),
         })
         .collect();
         Self(operations)
@@ -103,32 +103,30 @@ impl From<orig::PathItem> for Operations {
 #[derive(Eq, PartialEq, Debug)]
 pub(crate) struct HandlerIdentifier(pub(crate) String);
 
-impl HandlerIdentifier {}
-
-/// Whether `ident` can be used as a Rust identifier, i.e. can safely be
-/// turned into a `proc_macro2::Ident` without panicking.
-fn is_valid_handler_identifier(ident: &str) -> bool {
-    syn::parse_str::<syn::Ident>(ident).is_ok()
-}
-
-impl From<orig::Extensions> for HandlerIdentifier {
-    fn from(extensions: orig::Extensions) -> Self {
+impl HandlerIdentifier {
+    fn from_extensions(extensions: &orig::Extensions, path: &str, method: &Method) -> Self {
         match extensions.get(HANDLER_EXTENSION_NAME) {
             Some(Value::String(handler_ident)) => {
                 if !is_valid_handler_identifier(handler_ident) {
                     abort_call_site!(format!(
-                        "Invalid autoroute handler identifier {:?}: must be a valid Rust identifier",
-                        handler_ident
+                        "Invalid autoroute handler identifier {:?} for {} {}: must be a valid Rust identifier",
+                        handler_ident, method, path
                     ));
                 }
                 Self(handler_ident.into())
             }
             _ => abort_call_site!(format!(
-                "Invalid autoroute handler value identifier: {:?}",
-                extensions
+                "Invalid autoroute handler value identifier for {} {}: {:?}",
+                method, path, extensions
             )),
         }
     }
+}
+
+/// Whether `ident` can be used as a Rust identifier, i.e. can safely be
+/// turned into a `proc_macro2::Ident` without panicking.
+fn is_valid_handler_identifier(ident: &str) -> bool {
+    syn::parse_str::<syn::Ident>(ident).is_ok()
 }
 
 #[derive(Eq, PartialEq, Debug)]
@@ -137,9 +135,9 @@ pub struct Operation {
     pub(crate) handler: HandlerIdentifier,
 }
 
-impl From<(Method, orig::Operation)> for Operation {
-    fn from((method, op): (Method, orig::Operation)) -> Self {
-        let handler = HandlerIdentifier::from(op.extensions);
+impl From<(Url, Method, orig::Operation)> for Operation {
+    fn from((url, method, op): (Url, Method, orig::Operation)) -> Self {
+        let handler = HandlerIdentifier::from_extensions(&op.extensions, &url, &method);
         Self { method, handler }
     }
 }
@@ -199,13 +197,14 @@ mod tests {
     #[test]
     fn test_handler_identifier_from_valid_identifier() {
         let extensions = extensions_with_handler("test_handler");
+        let method = Method::from(httpMethod::GET);
         assert_eq!(
-            HandlerIdentifier::from(extensions),
+            HandlerIdentifier::from_extensions(&extensions, "/test", &method),
             HandlerIdentifier("test_handler".to_string())
         );
     }
 
-    // `HandlerIdentifier::from` aborts (via `abort_call_site!`) on an invalid
+    // `HandlerIdentifier::from_extensions` aborts (via `abort_call_site!`) on an invalid
     // identifier, which only unwinds cleanly from within a real proc-macro
     // `entry_point`. So the validation predicate it relies on is exercised
     // directly here instead of trying to catch the abort from a plain unit

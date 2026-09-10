@@ -1,0 +1,13 @@
+error: Autoroute support only V3 specification
+ --> tests/trybuild/fail/unsupported_version.rs:1:1
+  |
+1 | / autoroute::gen_config_from!(
+2 | |     r#"
+3 | | swagger: "2.0"
+4 | | info:
+... |
+8 | | "#
+9 | | );
+  | |_^
+  |
+  = note: this error originates in the macro `autoroute::gen_config_from` (in Nightly builds, run with -Z macro-backtrace for more info)

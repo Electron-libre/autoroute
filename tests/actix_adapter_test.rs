@@ -4,7 +4,7 @@ use actix_web::{
 };
 use serde::{Deserialize, Serialize};
 
-use autoroute::gen_config_from_path;
+use autoroute::{gen_config_from, gen_config_from_path};
 
 #[derive(Deserialize, Serialize)]
 struct TestHandlerResponse {
@@ -86,5 +86,39 @@ async fn test_url_reflection() {
 
     let resp = test::call_service(&mut test_service, req).await;
     let json_resp: TestHandlerResponse = test::read_body_json(resp).await;
+    assert_eq!(json_resp.reflected_url, "http://localhost:8080/api/foo/1",);
+}
+
+#[actix_rt::test]
+async fn test_gen_config_from_inline_spec() {
+    gen_config_from!(
+        r#"
+openapi: 3.0.0
+info:
+  title: Test API
+  version: 0.0.1
+paths:
+  /foo/{fooId}:
+    x-autoroute-resource: "foo"
+    get:
+      operationId: getFoo
+      responses:
+        '200':
+          description: success
+      x-autoroute-handler: test_handler
+"#
+    );
+    let mut test_service =
+        test::init_service(App::new().service(web::scope(TEST_SCOPE).configure(autoroute_config)))
+            .await;
+
+    let req = test::TestRequest::with_uri(TEST_URI)
+        .method(http::Method::GET)
+        .to_request();
+
+    let resp = test::call_service(&mut test_service, req).await;
+    assert_eq!(resp.status(), http::StatusCode::OK);
+    let json_resp: TestHandlerResponse = test::read_body_json(resp).await;
+    assert_eq!(json_resp.path_param, "1");
     assert_eq!(json_resp.reflected_url, "http://localhost:8080/api/foo/1",);
 }

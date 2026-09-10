@@ -1,7 +1,6 @@
 use std::{
     collections::BTreeMap,
     fmt::{self, Display, Formatter},
-    slice::Iter,
 };
 
 use http::Method as httpMethod;
@@ -9,9 +8,7 @@ use openapi::{
     v3_0 as orig,
     v3_0::{PathItem, Value},
 };
-use proc_macro2::{Punct, Spacing, TokenStream};
 use proc_macro_error::abort_call_site;
-use quote::{quote, ToTokens, TokenStreamExt};
 
 use crate::{HANDLER_EXTENSION_NAME, RESOURCE_EXTENSION};
 

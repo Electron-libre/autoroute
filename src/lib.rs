@@ -4,7 +4,6 @@ use proc_macro_error::{abort, abort_call_site, proc_macro_error};
 use syn::{parse_macro_input, LitStr};
 
 mod actix_adapter;
-#[allow(unused)]
 mod spec;
 
 const HANDLER_EXTENSION_NAME: &str = "x-autoroute-handler";

@@ -1,0 +1,23 @@
+[package]
+name = "autoroute-macros"
+version = "0.1.0"
+authors = ["Cedric <cedric.brancourt@gmail.com>"]
+edition = "2024"
+description = "Procedural macros of autoroute. Use the `autoroute` crate instead."
+
+[lib]
+proc-macro = true
+
+[dependencies]
+quote = "1.0.7"
+proc-macro2 = "1.0.24"
+syn = "1.0.48"
+proc-macro-error = "1.0.4"
+http = "0.2.1"
+serde_yaml = "0.9.34"
+serde_json = "1.0.151"
+jsonschema = { version = "0.58.1", default-features = false }
+
+[lints.clippy]
+# Set priority to -1 so pedantic lints are applied after specific allows
+pedantic = { priority = -1, level = "deny" }

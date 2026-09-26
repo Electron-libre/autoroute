@@ -1,3 +1,6 @@
+[workspace]
+members = [".", "autoroute-macros"]
+
 [package]
 name = "autoroute"
 version = "0.1.0"
@@ -5,16 +8,19 @@ authors = ["Cedric <cedric.brancourt@gmail.com>"]
 edition = "2024"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[lib]
-proc-macro = true
+[features]
+default = ["actix", "validation"]
+# Actix Web adapter.
+actix = ["dep:actix-web"]
+# Request validation middleware, against the JSON schemas of the specification.
+validation = ["actix", "dep:jsonschema", "dep:serde_json", "dep:serde_urlencoded"]
 
 [dependencies]
-openapi =  { git = "https://github.com/Electron-libre/openapi.git" }
-quote = "1.0.7"
-proc-macro2 = "1.0.24"
-syn = "1.0.48"
-proc-macro-error = "1.0.4"
-http = "0.2.1"
+autoroute-macros = { path = "autoroute-macros", version = "0.1.0" }
+actix-web = { version = "4", optional = true }
+jsonschema = { version = "0.58.1", default-features = false, optional = true }
+serde_json = { version = "1", optional = true }
+serde_urlencoded = { version = "0.7", optional = true }
 
 [dev-dependencies]
 serde = { version = "1", features = ["derive"] }

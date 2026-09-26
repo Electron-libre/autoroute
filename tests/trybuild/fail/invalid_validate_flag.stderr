@@ -1,0 +1,13 @@
+error: Invalid x-autoroute-validate value for the specification: expected a boolean, got String("yes")
+ --> tests/trybuild/fail/invalid_validate_flag.rs:1:1
+  |
+1 | / autoroute::gen_config_from!(
+2 | |     r##"
+3 | | openapi: 3.0.0
+4 | | x-autoroute-validate: "yes"
+5 | | paths: {}
+6 | | "##
+7 | | );
+  | |_^
+  |
+  = note: this error originates in the macro `autoroute::gen_config_from` (in Nightly builds, run with -Z macro-backtrace for more info)

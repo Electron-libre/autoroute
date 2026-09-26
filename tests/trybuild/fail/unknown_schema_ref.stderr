@@ -1,12 +1,12 @@
-error: Invalid autoroute handler value identifier for GET /foo: expected a string for x-autoroute-handler, got None
-  --> tests/trybuild/fail/missing_handler.rs:1:1
+error: Unresolved reference "#/components/schemas/Missing"
+  --> tests/trybuild/fail/unknown_schema_ref.rs:1:1
    |
  1 | / autoroute::gen_config_from!(
- 2 | |     r#"
+ 2 | |     r##"
  3 | | openapi: 3.0.0
- 4 | | info:
+ 4 | | x-autoroute-validate: true
 ...  |
-13 | | "#
+13 | | "##
 14 | | );
    | |_^
    |
